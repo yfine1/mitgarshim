@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>משמורת v6.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#090b12;--surface:#111420;--surface2:#191d2e;--border:#252b42;
+  --me:#5b9cf6;--me-bg:rgba(91,156,246,.14);
+  --mom:#f97070;--mom-bg:rgba(249,112,112,.14);
+  --other:#e4b84a;--other-bg:rgba(228,184,74,.14);
+  --holiday:#b57bee;--holiday-bg:rgba(181,123,238,.13);
+  --sel:#ffd166;--sel-bg:rgba(255,209,102,.18);
+  --text:#dde1f5;--muted:#5e6d9a;--r:14px;--gcal:#1a73e8;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direction:rtl;overflow-x:hidden;min-height:100vh}
+
+/* ── WELCOME / SETUP ── */
+#welcome{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;text-align:center;gap:0}
+.w-logo{font-size:58px;margin-bottom:14px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.w-title{font-size:33px;font-weight:900;background:linear-gradient(135deg,var(--me),var(--holiday));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.w-sub{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:24px}
+.w-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:380px;text-align:right}
+.w-card h3{font-size:14px;font-weight:700;margin-bottom:12px}
+.fl{font-size:11px;color:var(--muted);margin-bottom:4px}
+.fi{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Heebo',sans-serif;font-size:15px;padding:10px 13px;outline:none;direction:rtl;margin-bottom:12px}
+.fi:focus{border-color:var(--me)}
+.fi::placeholder{color:var(--muted)}
+.w-info{font-size:11px;color:var(--muted);background:var(--surface2);border-radius:9px;padding:11px;line-height:1.6;margin-bottom:14px}
+.w-info b{color:var(--text)}
+
+/* CLIENT ID INPUT */
+.client-row{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.client-row label{font-size:11px;color:var(--muted)}
+.client-row input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Heebo',sans-serif;font-size:12px;padding:9px 11px;outline:none;direction:ltr}
+.client-row input:focus{border-color:var(--me)}
+.client-row input::placeholder{color:var(--muted);font-size:11px}
+
+.btn-google{width:100%;background:var(--gcal);color:#fff;border:none;border-radius:12px;padding:15px;font-family:'Heebo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:opacity .15s}
+.btn-google:active{opacity:.82}
+.btn-google:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── APP ── */
+#app{display:none}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:8px}
+.app-title{font-size:17px;font-weight:900;background:linear-gradient(135deg,var(--me),var(--holiday));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.hdr-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.pill{font-size:14px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:9px 14px;cursor:pointer;white-space:nowrap;transition:all .15s;font-weight:600}
+.pill:active,.pill.active{border-color:var(--me);color:var(--me)}
+
+/* MULTI-SELECT TOOLBAR */
+.sel-toolbar{display:none;background:var(--sel-bg);border-bottom:1px solid rgba(255,209,102,.25);padding:9px 13px;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sel-toolbar.show{display:flex}
+.sel-count{font-size:13px;font-weight:700;color:var(--sel)}
+.sel-actions{display:flex;gap:5px}
+.sel-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Heebo',sans-serif;font-size:13px;font-weight:600;padding:9px 12px;cursor:pointer;white-space:nowrap;min-height:40px}
+.sel-btn.me-btn {background:var(--me-bg); border-color:var(--me); color:var(--me)}
+.sel-btn.mom-btn{background:var(--mom-bg);border-color:var(--mom);color:var(--mom)}
+.sel-btn.oth-btn{background:var(--other-bg);border-color:var(--other);color:var(--other)}
+
+.month-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 6px}
+.month-label{font-size:19px;font-weight:700}
+.nav-btn{background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);width:44px;height:44px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nav-btn:active{border-color:var(--me)}
+.legend{display:flex;gap:8px;padding:0 14px 8px;flex-wrap:wrap}
+.leg-i{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.leg-d{width:7px;height:7px;border-radius:50%}
+
+/* SYNC BAR */
+.sync-bar{margin:0 8px 8px;border-radius:10px;padding:9px 13px;font-size:12px;display:flex;align-items:center;gap:8px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all .2s}
+.sync-bar.ok{background:rgba(86,201,154,.08);border-color:rgba(86,201,154,.3);color:#56c99a}
+.sync-bar.err{background:rgba(249,112,112,.08);border-color:rgba(249,112,112,.2);color:var(--mom)}
+.sync-bar.busy{background:rgba(91,156,246,.08);border-color:rgba(91,156,246,.2);color:var(--me)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sync-bar.ok  .sync-dot{animation:pulse 2s infinite}
+.sync-bar.busy .sync-dot{animation:pulse .6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* CALENDAR */
+.cal-wrap{padding:0 7px 8px;direction:ltr}
+.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;direction:ltr}
+.wd{text-align:center;font-size:10px;color:var(--muted);font-weight:600;padding:3px 0}
+.wd.shab{color:#1a73e8;font-weight:900}
+.days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;direction:ltr}
+.dc{aspect-ratio:1;border-radius:8px;background:var(--surface);border:1.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;min-height:44px;transition:transform .1s;user-select:none}
+.dc:active:not(.empty){transform:scale(.9)}
+.dc.empty{background:transparent;border-color:transparent;cursor:default}
+.dc.today{border-color:#56c99a!important;box-shadow:0 0 0 2px rgba(86,201,154,.28);background:rgba(86,201,154,.07)!important}
+.dc.s-me   {background:var(--me-bg);   border-color:var(--me)}
+.dc.s-mom  {background:var(--mom-bg);  border-color:var(--mom)}
+.dc.s-other{background:var(--other-bg);border-color:var(--other)}
+.dc.picked {border-color:var(--sel)!important;box-shadow:0 0 0 2px rgba(255,209,102,.3)!important;background:var(--sel-bg)!important}
+.dc.shab-cell{background:rgba(26,115,232,.15)!important;border-color:rgba(26,115,232,.35)!important}
+.dc.shab-cell.s-me{background:var(--me-bg)!important}
+.dc.shab-cell.s-mom{background:var(--mom-bg)!important}
+.dc.shab-cell.s-other{background:var(--other-bg)!important}
+.dc.gcal::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--gcal)}
+.dn{font-size:14px;font-weight:600;line-height:1}
+.dc.s-me .dn{color:var(--me)}.dc.s-mom .dn{color:var(--mom)}.dc.s-other .dn{color:var(--other)}
+.hd{position:absolute;top:2px;right:2px;font-size:8px;line-height:1;opacity:.9}
+.si{font-size:9px;margin-top:1px}
+.dc.is-holiday{background:var(--holiday-bg)!important;border-color:var(--holiday)!important}
+.dc.is-holiday .dn{color:var(--holiday)!important}
+.hol-name{font-size:7px;color:var(--holiday);font-weight:700;line-height:1.1;text-align:center;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px;margin-top:1px}
+.shab-cell .dn{color:#1a73e8;font-weight:900;opacity:1;text-shadow:0 0 8px rgba(26,115,232,.6)}
+.dc.today .dn{color:#56c99a!important;font-weight:900}
+.debug-line-ok{color:#56c99a}.debug-line-err{color:#f97070}.debug-line-info{color:#5b9cf6}
+.select-hint{margin:0 8px 8px;background:rgba(255,209,102,.07);border:1px dashed rgba(255,209,102,.25);border-radius:9px;padding:8px 12px;font-size:11px;color:rgba(255,209,102,.7);text-align:center}
+
+/* SECTIONS */
+.section{margin:0 8px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.sec-title{font-size:10px;color:var(--muted);font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.stat-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.stat-row:last-child{margin-bottom:0}
+.stat-label{font-size:11px;font-weight:500;width:68px}
+.stat-bar-wrap{flex:1;background:var(--surface2);border-radius:5px;height:5px;overflow:hidden}
+.stat-bar{height:100%;border-radius:5px;transition:width .5s cubic-bezier(.34,1.56,.64,1)}
+.stat-count{font-size:12px;font-weight:700;width:20px;text-align:left}
+.hol-item{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px}
+.hol-item:last-child{margin-bottom:0}
+.hol-date{background:var(--holiday-bg);border:1px solid rgba(181,123,238,.3);border-radius:6px;padding:2px 7px;font-size:10px;color:var(--holiday);font-weight:700;min-width:36px;text-align:center}
+.bottom-space{height:40px}
+
+/* DAY MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{background:var(--surface);border-radius:20px 20px 0 0;border:1px solid var(--border);border-bottom:none;width:100%;max-width:480px;padding:18px 18px 44px;transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.4,.64,1);max-height:90vh;overflow-y:auto}
+.overlay.open .sheet{transform:translateY(0)}
+.handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.m-date{font-size:17px;font-weight:700;margin-bottom:2px}
+.m-heb{font-size:11px;color:var(--muted);margin-bottom:12px}
+.hol-tag{background:var(--holiday-bg);border:1px solid rgba(181,123,238,.3);border-radius:7px;padding:6px 11px;font-size:12px;color:var(--holiday);margin-bottom:12px;display:none;align-items:center;gap:5px;justify-content:space-between}
+.hol-tag.show{display:flex}
+.hol-hide-btn{background:rgba(181,123,238,.18);border:1px solid rgba(181,123,238,.4);border-radius:6px;color:var(--holiday);font-size:11px;font-weight:700;padding:3px 8px;cursor:pointer;white-space:nowrap;font-family:'Heebo',sans-serif}
+.hol-hide-btn:active{opacity:.7}
+.status-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:13px}
+.sb{border-radius:11px;border:2px solid var(--border);padding:12px 6px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--surface2);color:var(--muted);transition:all .13s}
+.sb .bi{font-size:22px}
+.sb:active{transform:scale(.95)}
+.sb.a-me   {background:var(--me-bg);   border-color:var(--me);   color:var(--me)}
+.sb.a-mom  {background:var(--mom-bg);  border-color:var(--mom);  color:var(--mom)}
+.sb.a-other{background:var(--other-bg);border-color:var(--other);color:var(--other)}
+.note-lbl{font-size:11px;color:var(--muted);margin-bottom:4px}
+.note-ta{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Heebo',sans-serif;font-size:14px;padding:9px 11px;resize:none;outline:none;direction:rtl;margin-bottom:12px}
+.note-ta:focus{border-color:var(--me)}
+.btn-save-main{width:100%;background:linear-gradient(135deg,var(--me),#7b6ef6);color:#fff;border:none;border-radius:11px;padding:14px;font-family:'Heebo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;transition:opacity .15s}
+.btn-save-main:active{opacity:.82}
+.btn-save-main:disabled{opacity:.45;cursor:not-allowed}
+.btn-clear{width:100%;background:transparent;border:1px solid var(--border);border-radius:11px;padding:10px;font-family:'Heebo',sans-serif;font-size:13px;color:var(--muted);cursor:pointer}
+.btn-clear:active{background:var(--surface2)}
+.save-status{font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px;min-height:16px}
+
+/* MULTI MODAL */
+.ms-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.ms-overlay.open{opacity:1;pointer-events:all}
+.ms-sheet{background:var(--surface);border-radius:20px 20px 0 0;border:1px solid var(--border);border-bottom:none;width:100%;max-width:480px;padding:18px 18px 44px;transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.4,.64,1)}
+.ms-overlay.open .ms-sheet{transform:translateY(0)}
+.ms-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.ms-sub{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.ms-status-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:13px}
+.ms-note{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Heebo',sans-serif;font-size:14px;padding:9px 11px;resize:none;outline:none;direction:rtl;margin-bottom:12px}
+.ms-note:focus{border-color:var(--me)}
+.btn-ms-save{width:100%;background:linear-gradient(135deg,var(--me),#7b6ef6);color:#fff;border:none;border-radius:11px;padding:14px;font-family:'Heebo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.btn-ms-cancel{width:100%;background:transparent;border:1px solid var(--border);border-radius:11px;padding:11px;font-family:'Heebo',sans-serif;font-size:13px;color:var(--muted);cursor:pointer}
+
+/* NAME MODAL */
+.name-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s}
+.name-ov.open{opacity:1;pointer-events:all}
+.name-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:340px}
+.name-box h3{font-size:15px;font-weight:700;margin-bottom:12px}
+.name-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Heebo',sans-serif;font-size:15px;padding:10px 13px;outline:none;direction:rtl;margin-bottom:12px}
+.name-box input:focus{border-color:var(--me)}
+.name-btns{display:flex;gap:7px}
+.name-btns button{flex:1;padding:11px;border-radius:9px;border:none;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.btn-nok{background:var(--me);color:#fff}
+.btn-ncancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border)!important}
+
+/* POST-LOGIN SUGGESTION MODAL */
+.pl-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.pl-ov.open{opacity:1;pointer-events:all}
+.pl-box{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:380px}
+.pl-box h3{font-size:17px;font-weight:800;margin-bottom:6px;text-align:center}
+.pl-box p{font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.6}
+.pl-counts{display:flex;gap:10px;margin-bottom:18px}
+.pl-count{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px;text-align:center}
+.pl-count .num{font-size:26px;font-weight:900;line-height:1}
+.pl-count .lbl{font-size:10px;color:var(--muted);margin-top:3px}
+.pl-count.gcal .num{color:var(--gcal)}
+.pl-count.local .num{color:var(--me)}
+.pl-btns{display:flex;flex-direction:column;gap:8px}
+.pl-btn{width:100%;border:none;border-radius:12px;padding:13px 16px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:right;line-height:1.4}
+.pl-btn small{display:block;font-size:11px;font-weight:400;opacity:.75;margin-top:2px}
+.pl-btn-a{background:rgba(26,115,232,.15);color:#6fa8f5;border:1px solid rgba(26,115,232,.3)!important}
+.pl-btn-b{background:var(--me-bg);color:var(--me);border:1px solid var(--me)!important}
+.pl-btn-c{background:rgba(86,201,154,.1);color:#56c99a;border:1px solid rgba(86,201,154,.3)!important}
+
+/* SYNC CHOICE MODAL */
+.sync-choice-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.sync-choice-ov.open{opacity:1;pointer-events:all}
+.sync-choice-box{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:380px}
+.sync-choice-box h3{font-size:17px;font-weight:800;margin-bottom:6px;text-align:center}
+.sync-choice-box p{font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.6}
+.sync-counts{display:flex;gap:10px;margin-bottom:20px}
+.sync-count-box{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.sync-count-box .sc-num{font-size:28px;font-weight:900;line-height:1}
+.sync-count-box .sc-lbl{font-size:11px;color:var(--muted);margin-top:4px}
+.sync-count-box.gcal-box .sc-num{color:var(--gcal)}
+.sync-count-box.local-box .sc-num{color:var(--me)}
+.sync-choice-btns{display:flex;flex-direction:column;gap:8px}
+.btn-sync-gcal{width:100%;background:var(--gcal);color:#fff;border:none;border-radius:12px;padding:14px;font-family:'Heebo',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+.btn-sync-local{width:100%;background:var(--me-bg);color:var(--me);border:1px solid var(--me);border-radius:12px;padding:14px;font-family:'Heebo',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+.btn-sync-merge{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:12px;font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer}
+
+/* CLIENT ID MODAL */
+.cid-ov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.cid-ov.open{opacity:1;pointer-events:all}
+.cid-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:380px}
+.cid-box h3{font-size:15px;font-weight:700;margin-bottom:10px}
+.cid-steps{font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:14px;background:var(--surface2);border-radius:9px;padding:11px}
+.cid-steps a{color:var(--me);text-decoration:none}
+.cid-steps code{color:var(--me);font-size:10px}
+.cid-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Heebo',sans-serif;font-size:12px;padding:10px 12px;outline:none;direction:ltr;margin-bottom:12px}
+.cid-box input:focus{border-color:var(--me)}
+.cid-box input::placeholder{color:var(--muted);font-size:11px}
+.cid-btns{display:flex;gap:7px}
+.cid-btns button{flex:1;padding:11px;border-radius:9px;border:none;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.btn-cid-ok{background:var(--gcal);color:#fff}
+.btn-cid-cancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border)!important}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 20px;font-size:13px;font-weight:500;z-index:600;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,.5);max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:420px){
+  .cal-wrap{padding:0 4px 8px}
+  .days-grid{gap:3px}
+  .weekdays{gap:3px}
+  .dn{font-size:13px}
+  .section{margin:0 6px 8px}
+  header{padding:9px 10px}
+  .hdr-btns{gap:4px}
+  .pill{padding:8px 10px;font-size:13px}
+  .month-nav{padding:10px 10px 4px}
+  .legend{gap:6px;padding:0 10px 8px}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ WELCOME ════════ -->
+<div id="welcome">
+  <div class="w-logo">👨‍👧</div>
+  <div class="w-title">משמורת</div>
+  <div class="w-sub">לוח שנה ימי משמורת<br>עם סנכרון Google Calendar אמיתי<br><span style="font-size:12px;color:#56c99a;font-weight:700">v6.0</span></div>
+  <div class="w-card">
+    <h3>👶 שם הילד/ה</h3>
+    <input class="fi" id="wName" placeholder="למשל: נועם" />
+
+    <h3 style="margin-top:4px">🔑 Google Client ID</h3>
+    <div class="client-row">
+      <input type="text" id="clientIdInp" placeholder="xxxxxxx.apps.googleusercontent.com" />
+    </div>
+
+    <button class="btn-google" id="btnConnect" onclick="connectGoogle()">
+      <span style="font-size:20px">🔐</span> התחבר עם Google
+    </button>
+  </div>
+</div>
+
+<!-- ════════ APP ════════ -->
+<div id="app">
+  <header>
+    <div class="app-title">👨‍👧 משמורת &nbsp;<span id="vbadge" style="font-size:12px;color:#56c99a;font-weight:900;letter-spacing:0">v6.0</span></div>
+    <div class="hdr-btns">
+      <div class="pill" id="childPill" onclick="openNameModal()">👶 ...</div>
+      <div class="pill" onclick="exportXLS()">📊</div>
+      <div class="pill" id="authPill" onclick="handleAuthPill()">🔗 חבר</div>
+      <div class="pill" id="selectToggle" onclick="toggleSelectMode()">☑️ בחר</div>
+      <div class="pill" id="debugToggle" onclick="toggleDebug()" style="opacity:.5">🐛</div>
+    </div>
+  </header>
+
+  <div class="sel-toolbar" id="selToolbar">
+    <div class="sel-count" id="selCount">0 נבחרו</div>
+    <div class="sel-actions">
+      <button class="sel-btn me-btn"  onclick="applyMulti('me')">👨 אצלי</button>
+      <button class="sel-btn mom-btn" onclick="applyMulti('mom')">👩 אמא</button>
+      <button class="sel-btn oth-btn" onclick="applyMulti('other')">✈️ אחר</button>
+      <button class="sel-btn" onclick="clearMulti()">🗑️</button>
+    </div>
+  </div>
+
+  <div class="month-nav">
+    <button class="nav-btn" onclick="go(1)">‹</button>
+    <div class="month-label" id="mLabel"></div>
+    <button class="nav-btn" onclick="go(-1)">›</button>
+  </div>
+
+  <div class="legend">
+    <div class="leg-i"><div class="leg-d" style="background:var(--me)"></div>אצלי</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--mom)"></div>אצל אמא</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--other)"></div>אחר</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--holiday)"></div>חג</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--gcal)"></div>GCal ✓</div>
+  </div>
+
+  <div class="sync-bar" id="syncBar" onclick="handleSyncBarClick()">
+    <div class="sync-dot"></div>
+    <span id="syncTxt">טוען...</span>
+  </div>
+
+  <div id="selHint" class="select-hint" style="display:none">✋ בחר ימים ואז לחץ סטטוס למעלה</div>
+  <div id="debugPanel" style="display:none;margin:0 8px 8px;background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:10px;font-size:11px;color:#8b949e;font-family:monospace;max-height:160px;overflow-y:auto;direction:ltr;text-align:left"></div>
+
+  <div class="cal-wrap">
+    <div class="weekdays">
+      <div class="wd">א׳</div><div class="wd">ב׳</div><div class="wd">ג׳</div>
+      <div class="wd">ד׳</div><div class="wd">ה׳</div><div class="wd shab">ו׳</div>
+      <div class="wd shab">ש׳</div>
+    </div>
+    <div class="days-grid" id="daysGrid"></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">סטטיסטיקה חודשית</div>
+    <div id="statsBars"></div>
+  </div>
+  <div class="section">
+    <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">✡️ חגים החודש<span id="restoreHolBtn" onclick="restoreAllHolidays()" style="display:none;font-size:10px;color:var(--holiday);cursor:pointer;font-weight:700;background:var(--holiday-bg);border:1px solid rgba(181,123,238,.3);border-radius:5px;padding:2px 7px">שחזר הכל</span></div>
+    <div id="holList"></div>
+  </div>
+  <div class="bottom-space"></div>
+</div>
+
+<!-- ════════ DAY MODAL ════════ -->
+<div class="overlay" id="ov" onclick="closeBg(event)">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="m-date" id="mDate"></div>
+    <div class="m-heb"  id="mHeb"></div>
+    <div class="hol-tag" id="mHolTag"><span>✡️ <span id="mHolName"></span></span><button class="hol-hide-btn" onclick="hideCurrentHoliday()">הסתר חג ✕</button></div>
+    <div class="status-row">
+      <button class="sb" id="sb-me"    onclick="pickStatus('me')">   <span class="bi">👨</span>אצלי</button>
+      <button class="sb" id="sb-mom"   onclick="pickStatus('mom')">  <span class="bi">👩</span>אצל אמא</button>
+      <button class="sb" id="sb-other" onclick="pickStatus('other')"><span class="bi">✈️</span>אחר</button>
+    </div>
+    <div class="note-lbl">הערה</div>
+    <textarea class="note-ta" id="mNote" rows="2" placeholder="נסיעה לסבא, יום הולדת..."></textarea>
+    <div class="save-status" id="saveStatus"></div>
+    <button class="btn-save-main" id="btnSave" onclick="saveDay()">💾 שמור</button>
+    <button class="btn-clear" onclick="clearDay()">🗑️ נקה יום</button>
+  </div>
+</div>
+
+<!-- ════════ MULTI MODAL ════════ -->
+<div class="ms-overlay" id="msOv" onclick="closeMsBg(event)">
+  <div class="ms-sheet">
+    <div class="handle"></div>
+    <div class="ms-title" id="msTitle"></div>
+    <div class="ms-sub"   id="msSub"></div>
+    <div class="ms-status-row">
+      <button class="sb" id="msb-me"    onclick="msPick('me')">   <span class="bi">👨</span>אצלי</button>
+      <button class="sb" id="msb-mom"   onclick="msPick('mom')">  <span class="bi">👩</span>אצל אמא</button>
+      <button class="sb" id="msb-other" onclick="msPick('other')"><span class="bi">✈️</span>אחר</button>
+    </div>
+    <textarea class="ms-note" id="msNote" rows="2" placeholder="הערה לכל הימים..."></textarea>
+    <button class="btn-ms-save"   onclick="applyMultiSave()">💾 שמור הכל</button>
+    <button class="btn-ms-cancel" onclick="closeMsModal()">ביטול</button>
+  </div>
+</div>
+
+<!-- ════════ NAME MODAL ════════ -->
+<div class="name-ov" id="nameOv" onclick="closeNameBg(event)">
+  <div class="name-box">
+    <h3>✏️ שם הילד/ה</h3>
+    <input type="text" id="nameInp" />
+    <div class="name-btns">
+      <button class="btn-nok"     onclick="saveName()">שמור</button>
+      <button class="btn-ncancel" onclick="closeNameModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- POST-LOGIN SUGGESTION MODAL -->
+<div class="pl-ov" id="postLoginOv">
+  <div class="pl-box">
+    <h3>✅ Connected!</h3>
+    <p>What would you like to do with your data?</p>
+    <div class="pl-counts">
+      <div class="pl-count gcal">
+        <div class="num" id="plGcalCount">0</div>
+        <div class="lbl">📅 Google Calendar</div>
+      </div>
+      <div class="pl-count local">
+        <div class="num" id="plLocalCount">0</div>
+        <div class="lbl">💻 Local browser</div>
+      </div>
+    </div>
+    <div class="pl-btns">
+      <button class="pl-btn pl-btn-a" onclick="postLoginChoice('gcal')">
+        A. Use Google Calendar as master
+        <small>Local data replaced by GCal (already applied)</small>
+      </button>
+      <button class="pl-btn pl-btn-b" onclick="postLoginChoice('local')">
+        B. Keep local — upload to Google Calendar
+        <small>Local events uploaded, then merge both</small>
+      </button>
+      <button class="pl-btn pl-btn-c" onclick="postLoginChoice('safe')">
+        C. Safe mode — never delete GCal events older than 1 month
+        <small>New saves sync normally, old events always protected</small>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SYNC CHOICE MODAL -->
+<div class="sync-choice-ov" id="syncChoiceOv">
+  <div class="sync-choice-box">
+    <h3>🔄 Sync Options</h3>
+    <p>⚠️ Both Google Calendar and this browser have data.<br>
+    <b>Choose carefully — this cannot be undone.</b></p>
+    <div class="sync-counts">
+      <div class="sync-count-box gcal-box">
+        <div class="sc-num" id="scGcalCount">0</div>
+        <div class="sc-lbl">📅 Google Calendar<br>events</div>
+      </div>
+      <div class="sync-count-box local-box">
+        <div class="sc-num" id="scLocalCount">0</div>
+        <div class="sc-lbl">💻 Local browser<br>events</div>
+      </div>
+    </div>
+    <div class="sync-choice-btns">
+      <button class="btn-sync-gcal" onclick="resolveSync('gcal')">
+        📅 Use Google Calendar — overwrite local
+      </button>
+      <button class="btn-sync-local" onclick="resolveSync('local')">
+        💻 Keep local data — upload to Google Calendar
+      </button>
+      <button class="btn-sync-merge" onclick="resolveSync('merge')">
+        🔀 Merge — keep all events (local wins on same day)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT ID MODAL -->
+<div class="cid-ov" id="cidModal" onclick="if(event.target===this)closeClientIdModal()">
+  <div class="cid-box">
+    <h3>🔑 חיבור ל-Google Calendar</h3>
+    <div id="braveWarning" style="display:none;background:rgba(249,112,112,.12);border:1px solid rgba(249,112,112,.3);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:#f97070;text-align:center">
+      ⚠️ <b>Brave browser blocks Google sign-in.</b><br>
+      Open this app in <b>Chrome</b> instead:<br><br>
+      <button onclick="openInChrome()" style="background:#1a73e8;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;width:100%">
+        🔵 Open in Chrome
+      </button>
+    </div>
+
+    <div id="cidErrorMsg" style="display:none;font-size:11px;color:var(--mom);background:rgba(249,112,112,.1);border:1px solid rgba(249,112,112,.3);border-radius:8px;padding:10px;margin-bottom:10px;white-space:pre-wrap;direction:ltr;text-align:left"></div>
+    <input type="text" id="cidInp" placeholder="xxxx.apps.googleusercontent.com" />
+    <div style="font-size:10px;color:var(--muted);margin-bottom:10px;direction:ltr;word-break:break-all" id="cidCurrentOrigin"></div>
+    <div class="cid-btns">
+      <button class="btn-cid-ok"     onclick="saveClientId()">🔐 Connect</button>
+      <button class="btn-cid-cancel" onclick="clearClientId()">🗑️ Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client"></script>
+
+<script>
+'use strict';
+console.log('משמורת v6.0 loaded — origin:', window.location.origin, '— UA:', navigator.userAgent.substring(0,80));
+// ═══════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════
+const GCAL_API   = 'https://www.googleapis.com/calendar/v3';
+const SCOPE      = 'https://www.googleapis.com/auth/calendar';
+const CAL_NAME   = 'משמורת — ימי הילד';
+const APP_TAG    = 'mishmoret-app-v2';
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let childName  = localStorage.getItem('childName') || '';
+let clientId   = localStorage.getItem('clientId')  || '';
+let accessToken= null;
+let calendarId = localStorage.getItem('calendarId')|| null;
+let tokenExpiry= 0;
+let tokenClient= null;
+
+let dayData    = JSON.parse(localStorage.getItem('dayData')   || '{}');
+let hiddenHolidays = (()=>{
+  const raw = JSON.parse(localStorage.getItem('hiddenHolidays') || '[]');
+  // Migrate old date-key format ("2026-04-22") to name format — discard old keys
+  const names = raw.filter(x => !/^\d{4}-\d{2}-\d{2}$/.test(x));
+  if(names.length !== raw.length) localStorage.setItem('hiddenHolidays', JSON.stringify(names));
+  return new Set(names);
+})();
+let gcalIds    = JSON.parse(localStorage.getItem('gcalIds')   || '{}'); // key -> gcal event id
+
+let curY = new Date().getFullYear();
+let curM = new Date().getMonth();
+let selDay = null, curStatus = null;
+let selectMode = false, picked = new Set();
+let msStatus = null;
+
+// ═══════════════════════════════════════════
+//  KEY
+// ═══════════════════════════════════════════
+const dk = (y,m,d) => `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+// ═══════════════════════════════════════════
+//  WELCOME / CONNECT
+// ═══════════════════════════════════════════
+function connectGoogle(){
+  const nameVal = document.getElementById('wName').value.trim();
+  const cidVal  = document.getElementById('clientIdInp').value.trim();
+  if(!nameVal){ showToast('⚠️ הזן שם ילד/ה'); return; }
+  if(!cidVal || !cidVal.includes('.apps.googleusercontent.com')){
+    showToast('⚠️ Client ID לא תקין'); return;
+  }
+  childName = nameVal;
+  clientId  = cidVal;
+  localStorage.setItem('childName', childName);
+  localStorage.setItem('clientId',  clientId);
+
+  const btn = document.getElementById('btnConnect');
+  btn.disabled = true;
+  btn.textContent = '⏳ ממתין ל-Google...';
+
+  // Wait for GIS to be ready, then request token
+  if(isMobile()){
+    // Mobile: go straight to redirect auth (no need to wait for GIS)
+    doMobileRedirectAuth();
+  } else {
+    function tryConnect(){
+      if(window.google?.accounts?.oauth2){
+        initTokenClient(true);
+      } else {
+        setTimeout(tryConnect, 200);
+      }
+    }
+    tryConnect();
+  }
+}
+
+
+function isMobile(){ return /Android|iPhone|iPad/i.test(navigator.userAgent); }
+
+// checkRedirectToken kept as no-op (redirect flow no longer used)
+function checkRedirectToken(){ return false; }
+
+function initTokenClient(requestImmediately){
+  if(!clientId) return;
+  if(!window.google?.accounts?.oauth2){
+    setTimeout(()=>initTokenClient(requestImmediately), 300);
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: SCOPE,
+    callback: handleToken,
+    error_callback: (err)=>{
+      const msg = err.message || err.type || JSON.stringify(err);
+      console.error('GIS error:', msg, 'origin:', window.location.origin);
+      if(msg.includes('invalid_client') || msg.includes('401')){
+        setSyncBar('err','Invalid Client ID — tap 🔗 to update');
+        showClientIdError(window.location.origin);
+      } else {
+        setSyncBar('err','Auth error: '+msg.substring(0,40));
+        showToast('Auth error: '+msg, 5000);
+      }
+    }
+  });
+  if(requestImmediately){
+    if(isMobile()){
+      // Mobile: use redirect flow — more reliable than popup on Android
+      doMobileRedirectAuth();
+    } else {
+      tokenClient.requestAccessToken({prompt:'select_account'});
+    }
+  }
+}
+
+function doMobileRedirectAuth(){
+  // Implicit flow is deprecated — use GIS token flow on all devices
+  // GIS handles the OAuth internally without needing redirect URIs
+  dbg('Using GIS token flow (works on mobile too)','info');
+  if(!tokenClient) initTokenClient(false);
+  setTimeout(()=>{
+    if(tokenClient){
+      tokenClient.requestAccessToken({prompt:'select_account'});
+    } else {
+      showToast('GIS not ready — try again in a moment');
+      setSyncBar('err','GIS not loaded — check internet connection');
+    }
+  }, 300);
+}
+
+function showClientIdError(origin){
+  const msg = 
+    'Client ID not found in Google Cloud.\n\n' +
+    'Steps to fix:\n' +
+    '1. Go to console.cloud.google.com\n' +
+    '2. Check your OAuth Client ID still exists\n' +
+    '3. Make sure "'+origin+'" is in Authorized JS Origins\n' +
+    '4. Tap 🔗 Reset and enter the correct Client ID';
+  document.getElementById('cidErrorMsg').textContent = msg;
+  document.getElementById('cidErrorMsg').style.display = 'block';
+  openClientIdModal();
+}
+
+function handleToken(resp){
+  if(resp.error){
+    const origin = window.location.origin;
+    console.error('Token error:', resp.error, resp.error_description, 'origin:', origin);
+    if(resp.error === 'invalid_client'){
+      setSyncBar('err','Invalid Client ID — tap 🔗 to fix');
+      showClientIdError(origin);
+    } else if(resp.error === 'access_denied'){
+      setSyncBar('err','Access denied — try again');
+      showToast('Access denied — please try connecting again');
+    } else {
+      showToast('Auth error: '+resp.error+' — '+resp.error_description, 5000);
+      setSyncBar('err','Auth error: '+resp.error);
+    }
+    return;
+  }
+  accessToken = resp.access_token;
+  tokenExpiry  = Date.now() + (resp.expires_in||3600)*1000 - 60000;
+  localStorage.setItem('sessionStart', Date.now().toString());
+  // Hide welcome, show app, start smart sync
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('app').style.display='block';
+  updateAuthPill();
+  render();
+  setSyncBar('busy','Connected — syncing from Google Calendar...');
+  smartSync();
+}
+
+function showApp(withSync){
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('app').style.display='block';
+  updateAuthPill();
+  render();
+  if(withSync && accessToken) smartSync();
+  else if(!accessToken) setSyncBar('off','Not connected — tap 🔗');
+}
+
+// ═══════════════════════════════════════════
+//  AUTH PILL
+// ═══════════════════════════════════════════
+function updateAuthPill(){
+  const p = document.getElementById('authPill');
+  if(accessToken){
+    p.textContent='✅ מחובר';
+    p.style.borderColor='#56c99a';
+    p.style.color='#56c99a';
+    // Show days remaining in session
+    const sessionStart = parseInt(localStorage.getItem('sessionStart')||'0');
+    if(sessionStart){
+      const daysLeft = Math.floor((30 - (Date.now()-sessionStart)/(1000*60*60*24)));
+      p.title = `Session valid for ${Math.max(0,daysLeft)} more days`;
+    }
+  } else {
+    p.textContent='🔗 חבר';
+    p.style.borderColor='';
+    p.style.color='';
+    p.title = '';
+  }
+}
+
+function handleAuthPill(){
+  if(accessToken){ manualSync(); }
+  else { requestAuth(); }
+}
+
+function requestAuth(){
+  if(!clientId){ openClientIdModal(); return; }
+  if(isMobile()){
+    // Mobile: always use redirect flow
+    doMobileRedirectAuth();
+  } else {
+    if(!tokenClient) initTokenClient(false);
+    tokenClient?.requestAccessToken({prompt:'select_account'});
+  }
+}
+
+function openClientIdModal(){
+  document.getElementById('cidInp').value = clientId || '';
+  document.getElementById('cidCurrentOrigin').textContent = 'Origin: '+window.location.origin+' | '+(/Android|iPhone|iPad/i.test(navigator.userAgent)?'Mobile':'Desktop');
+  document.getElementById('cidErrorMsg').style.display = 'none';
+  // Show Brave warning on mobile
+  const bw = document.getElementById('braveWarning');
+  const cl = document.getElementById('chromeLink');
+  if(bw && /Android|iPhone|iPad/i.test(navigator.userAgent)){
+    bw.style.display = 'block';
+    if(cl){ cl.href = window.location.href; cl.textContent = window.location.href; }
+  } else if(bw){
+    bw.style.display = 'none';
+  }
+  document.getElementById('cidModal').classList.add('open');
+  setTimeout(()=>document.getElementById('cidInp').focus(), 150);
+}
+function openInChrome(){
+  // Android intent to open in Chrome
+  const url = window.location.href;
+  // Try Chrome intent first, fallback to direct link
+  window.location.href = 'intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
+  // Fallback after 500ms
+  setTimeout(()=>{ window.open(url,'_blank'); }, 500);
+}
+function clearClientId(){
+  clientId = '';
+  localStorage.removeItem('clientId');
+  localStorage.removeItem('calendarId');
+  document.getElementById('cidInp').value = '';
+  showToast('Client ID cleared — enter new one');
+}
+function closeClientIdModal(){ document.getElementById('cidModal').classList.remove('open'); }
+function saveClientId(){
+  const val = document.getElementById('cidInp').value.trim();
+  if(!val || !val.includes('.apps.googleusercontent.com')){
+    showToast('Client ID צריך להסתיים ב: .apps.googleusercontent.com'); return;
+  }
+  clientId = val;
+  localStorage.setItem('clientId', clientId);
+  closeClientIdModal();
+  showToast('Connecting...');
+  initTokenClient(true);
+}
+
+async function ensureToken(){
+  if(accessToken && Date.now() < tokenExpiry){ dbg('Token valid, expires in '+Math.round((tokenExpiry-Date.now())/1000)+'s'); return true; }
+  dbg('Token expired — need to reconnect','info');
+  if(isMobile()){
+    // On mobile, can't silently refresh — must redirect again
+    setSyncBar('err','Session expired — tap 🔗 to reconnect');
+    return false;
+  }
+  if(!tokenClient){
+    dbg('No tokenClient — need to reconnect','err');
+    setSyncBar('err','Session expired — tap 🔗 to reconnect');
+    return false;
+  }
+  return new Promise(resolve=>{
+    const orig = tokenClient.callback;
+    tokenClient.callback = resp=>{
+      tokenClient.callback = orig;
+      if(resp.error){ resolve(false); return; }
+      accessToken = resp.access_token;
+      tokenExpiry  = Date.now()+(resp.expires_in||3600)*1000-60000;
+      updateAuthPill();
+      resolve(true);
+    };
+    // 30-day session check — no popup needed within window
+    const _sessionStart = parseInt(localStorage.getItem('sessionStart')||'0');
+    const _30days = 30*24*60*60*1000;
+    if(Date.now() - _sessionStart < _30days){
+      tokenClient.requestAccessToken({prompt:''});
+    } else {
+      setSyncBar('off','Session expired (30 days) — tap 🔗 to reconnect');
+      localStorage.removeItem('sessionStart');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+//  GOOGLE CALENDAR API
+// ═══════════════════════════════════════════
+async function apiCall(method, url, body){
+  if(!await ensureToken()) throw new Error('לא מחובר');
+  const opts = {
+    method,
+    headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
+  };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if(r.status===204) return {};
+  const d = await r.json();
+  if(!r.ok){
+    console.error('GCal API error',method,url,JSON.stringify(body||{}),JSON.stringify(d));
+    throw new Error(d.error?.message||d.error?.errors?.[0]?.message||r.status);
+  }
+  return d;
+}
+
+async function getOrCreateCalendar(){
+  const r = await apiCall('GET', `${GCAL_API}/users/me/calendarList`);
+  const items = r.items||[];
+  dbg('Calendars: '+items.map(x=>'"'+x.summary+'"').join(', '));
+  const found = items.find(x=>x.summary===CAL_NAME)
+             || items.find(x=>x.summary&&x.summary.includes('משמורת'));
+  if(found){
+    calendarId = found.id;
+    localStorage.setItem('calendarId', calendarId);
+    dbg('Using calendar: "'+found.summary+'" id='+calendarId.substring(0,20)+'...', 'ok');
+    return calendarId;
+  }
+  dbg('Calendar not found — creating "'+CAL_NAME+'"', 'info');
+  const created = await apiCall('POST',`${GCAL_API}/calendars`,
+    {summary:CAL_NAME, timeZone:'Asia/Jerusalem'});
+  calendarId = created.id;
+  localStorage.setItem('calendarId', calendarId);
+  dbg('Created calendar: '+calendarId.substring(0,20)+'...', 'ok');
+  showToast('✅ Created calendar: '+CAL_NAME);
+  return calendarId;
+}
+
+function buildEvent(dateStr, status, note){
+  if(!status || status==='null'){ console.error('buildEvent called with invalid status:', status); return null; }
+  const [ys,ms,ds] = dateStr.split('-');
+  const y=parseInt(ys), m=parseInt(ms), d=parseInt(ds);
+  const nextD = new Date(y, m-1, d+1);
+  const pad   = n=>String(n).padStart(2,'0');
+  const endStr= `${nextD.getFullYear()}-${pad(nextD.getMonth()+1)}-${pad(nextD.getDate())}`;
+  const titles = {me:`👨 אצל אבא — ${childName}`,mom:`👩 אצל אמא — ${childName}`,other:`✈️ אחר — ${childName}`};
+  const hol    = getHoliday(y, m-1, d);
+  // Encode status in description for sync-back — keep it simple, no extendedProperties
+  const statusLine = (status && status !== 'null') ? `status:${status}` : '';
+  const desc = [statusLine, note, hol?`✡️ ${hol}`:'', APP_TAG].filter(Boolean).join('\n');
+  return {
+    summary:     titles[status] || `משמורת — ${childName}`,
+    description: desc,
+    start:       {date: dateStr},
+    end:         {date: endStr}
+  };
+}
+
+// Write a single day to GCal — always to משמורת — ימי הילד
+async function gcalWriteDay(dateStr, status, note){
+  // Ensure we have the משמורת calendar ID
+  const calId = await getOrCreateCalendar();
+  const ev    = buildEvent(dateStr, status, note);
+  if(!ev){ console.error('gcalWriteDay: invalid event, skipping'); return; }
+  dbg(`gcalWriteDay: calId=${calId ? calId.substring(0,20)+'...' : 'NULL'} date=${dateStr} status=${status}`);
+
+  const existing = gcalIds[dateStr];
+  let result;
+  try{
+    if(existing){
+      result = await apiCall('PUT',
+        `${GCAL_API}/calendars/${encodeURIComponent(calId)}/events/${existing}`, ev);
+    } else {
+      result = await apiCall('POST',
+        `${GCAL_API}/calendars/${encodeURIComponent(calId)}/events`, ev);
+    }
+    if(result?.id){
+      gcalIds[dateStr] = result.id;
+      localStorage.setItem('gcalIds', JSON.stringify(gcalIds));
+      dbg('Event saved to GCal id='+result.id.substring(0,20)+'...', 'ok');
+    }
+  } catch(e){
+    // If update fails (event deleted from GCal), try creating fresh
+    if(existing && e.message.includes('404')){
+      delete gcalIds[dateStr];
+      result = await apiCall('POST',
+        `${GCAL_API}/calendars/${encodeURIComponent(calId)}/events`, ev);
+      if(result?.id){ gcalIds[dateStr]=result.id; localStorage.setItem('gcalIds',JSON.stringify(gcalIds)); }
+    } else { throw e; }
+  }
+}
+
+// Delete a day from GCal
+async function gcalDeleteDay(dateStr){
+  // Safe mode: never delete events older than 1 month from GCal
+  if(localStorage.getItem('safeMode')==='1'){
+    const eventDate = new Date(dateStr);
+    const oneMonthAgo = new Date(); oneMonthAgo.setMonth(oneMonthAgo.getMonth()-1);
+    if(eventDate < oneMonthAgo){
+      dbg(`Safe mode: skipping delete of old event ${dateStr}`,'info');
+      return;
+    }
+  }
+  const calId   = calendarId; if(!calId) return;
+  const eventId = gcalIds[dateStr]; if(!eventId) return;
+  await apiCall('DELETE',`${GCAL_API}/calendars/${encodeURIComponent(calId)}/events/${eventId}`);
+  delete gcalIds[dateStr];
+  localStorage.setItem('gcalIds',JSON.stringify(gcalIds));
+  dbg(`Deleted GCal event: ${dateStr}`,'ok');
+}
+
+// ═══════════════════════════════════════════
+//  SYNC — TRUE TWO-WAY: GCal is source of truth
+// ═══════════════════════════════════════════
+async function syncAll(){
+  if(!accessToken){ setSyncBar('off','Not connected — tap 🔗'); return; }
+  setSyncBar('busy','Syncing...');
+  dbg('syncAll started, token='+!!accessToken);
+  try{
+    // Get all calendars
+    const calList = await apiCall('GET',`${GCAL_API}/users/me/calendarList`);
+    const allCals = calList.items||[];
+    console.log('Calendars found:', allCals.map(x=>'"'+x.summary+'"').join(', '));
+
+    // Always use משמורת — ימי הילד calendar (create if missing)
+    let mishCal = allCals.find(x=>x.summary===CAL_NAME)
+               || allCals.find(x=>x.summary&&x.summary.includes('משמורת'));
+
+    if(!mishCal){
+      // Create it
+      console.log('Creating משמורת calendar...');
+      const created = await apiCall('POST', `${GCAL_API}/calendars`, {
+        summary: CAL_NAME, timeZone: 'Asia/Jerusalem'
+      });
+      calendarId = created.id;
+      localStorage.setItem('calendarId', calendarId);
+      showToast('✅ Created calendar: '+CAL_NAME);
+      mishCal = {id: calendarId, summary: CAL_NAME};
+    } else {
+      calendarId = mishCal.id;
+      localStorage.setItem('calendarId', calendarId);
+    }
+    console.log('Using calendar:', mishCal.summary, calendarId);
+    setSyncBar('busy', `Reading "${mishCal.summary}"...`);
+
+    // Fetch ALL events from this calendar (2 years back, 3 years ahead)
+    const now  = new Date();
+    const from = new Date(now.getFullYear()-2,0,1).toISOString();
+    const to   = new Date(now.getFullYear()+3,11,31).toISOString();
+    const url  = `${GCAL_API}/calendars/${encodeURIComponent(calendarId)}/events`
+               + `?timeMin=${from}&timeMax=${to}&singleEvents=true&maxResults=2500`;
+    const data = await apiCall('GET', url);
+    const items = (data.items||[]).filter(e=>e.status!=='cancelled');
+    console.log(`Total events in "${mishCal.summary}":`, items.length);
+    console.log('Sample:', items.slice(0,8).map(e=>`"${e.summary}" ${e.start?.date||e.start?.dateTime}`).join(' | '));
+
+    const newDayData = {}, newGcalIds = {};
+    let merged = 0;
+
+    for(const ev of items){
+      // Accept ALL-day events only
+      const dateStr = ev.start?.date;
+      if(!dateStr) continue;
+
+      const summ = ev.summary||'';
+      const desc = ev.description||'';
+      console.log('Processing:', summ, dateStr, '| desc:', desc.substring(0,80));
+
+      // Parse status from every possible place
+      let status = null;
+
+      // 1. Explicit status: line
+      const stLine = desc.split('\n').find(l=>l.trim().startsWith('status:'));
+      if(stLine) status = stLine.replace(/.*status:/i,'').trim();
+
+      // 2. Description keywords (Hebrew)
+      if(!status||!['me','mom','other'].includes(status)) status = descToStatus(desc);
+
+      // 3. Title keywords
+      if(!status) status = titleToStatus(summ);
+
+      // 4. Broad title match — "אצלי" anywhere in title or desc
+      if(!status){
+        const combined = summ+' '+desc;
+        if(combined.includes('אצלי')||combined.includes('אצל אבא')||combined.includes('אבא')) status='me';
+        else if(combined.includes('אצל אמא')||combined.includes('אמא')) status='mom';
+        else if(combined.includes('אחר')) status='other';
+      }
+
+      // 5. If event is in משמורת calendar but we still can't parse — default to 'me'
+      //    (better to show something than skip)
+      if(!status && mishCal.summary&&mishCal.summary.includes('משמורת')) status='me';
+
+      if(!status){ console.log('  -> skipped (no status)'); continue; }
+
+      const note = desc.split('\n')
+        .filter(l=>l&&!l.includes(APP_TAG)&&!l.trim().startsWith('status:')&&!l.startsWith('✡️'))
+        .join(' ').trim();
+
+      newDayData[dateStr] = {status, note};
+      newGcalIds[dateStr] = ev.id;
+      merged++;
+      console.log('  -> accepted as', status);
+    }
+
+    dayData  = newDayData;
+    gcalIds  = newGcalIds;
+    localStorage.setItem('dayData', JSON.stringify(dayData));
+    localStorage.setItem('gcalIds', JSON.stringify(gcalIds));
+    render();
+    setSyncBar('ok',`✓ ${merged} events from "${mishCal.summary}" · ${new Date().toLocaleTimeString('he-IL')}`);
+    updateAuthPill();
+    fetchIsraelHolidays(); // pull live holidays from GCal
+  } catch(e){
+    console.error('syncAll error:', e);
+    setSyncBar('err','Sync error: '+e.message);
+  }
+}
+
+function manualSync(){ if(accessToken) syncAll(); else requestAuth(); }
+
+let debugEnabled = localStorage.getItem('debugEnabled') === '1';
+function toggleDebug(){
+  debugEnabled = !debugEnabled;
+  localStorage.setItem('debugEnabled', debugEnabled ? '1' : '0');
+  const btn = document.getElementById('debugToggle');
+  const panel = document.getElementById('debugPanel');
+  if(debugEnabled){
+    btn.style.opacity = '1';
+    btn.style.borderColor = '#f97070';
+    btn.style.color = '#f97070';
+    if(panel) panel.style.display = 'block';
+    showToast('🐛 Debug ON');
+  } else {
+    btn.style.opacity = '.5';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    if(panel) panel.style.display = 'none';
+    showToast('Debug OFF');
+  }
+}
+
+// ── SMART SYNC ──
+async function smartSync(){
+  setSyncBar('busy','Syncing from Google Calendar...');
+  dbg('smartSync started');
+  try{
+    const calList = await apiCall('GET',`${GCAL_API}/users/me/calendarList`);
+    const allCals = calList.items||[];
+    dbg('Calendars: '+allCals.map(x=>x.summary).join(', '));
+
+    const mishCal = allCals.find(x=>x.summary===CAL_NAME)
+                 || allCals.find(x=>x.summary&&x.summary.includes('משמורת'));
+
+    if(!mishCal){
+      dbg('No משמורת calendar yet — will create on first save','info');
+      setSyncBar('ok',`Connected · ${Object.keys(dayData).length} local events · save a day to create GCal`);
+      updateAuthPill();
+      // After login, suggest what to do
+      showPostLoginSuggestion(0, Object.keys(dayData).length);
+      return;
+    }
+
+    calendarId = mishCal.id;
+    localStorage.setItem('calendarId', calendarId);
+
+    const now  = new Date();
+    const from = new Date(now.getFullYear()-2,0,1).toISOString();
+    const to   = new Date(now.getFullYear()+3,11,31).toISOString();
+    const data = await apiCall('GET',
+      `${GCAL_API}/calendars/${encodeURIComponent(calendarId)}/events`+
+      `?timeMin=${from}&timeMax=${to}&singleEvents=true&maxResults=2500`);
+    const items = (data.items||[]).filter(e=>e.status!=='cancelled'&&e.start?.date);
+    dbg(`GCal has ${items.length} all-day events`);
+
+    // Parse GCal events
+    const gcalData = {};
+    for(const ev of items){
+      const dateStr = ev.start.date;
+      const desc = ev.description||'';
+      const summ = ev.summary||'';
+      let status = null;
+      const stLine = desc.split('\n').find(l=>l.trim().startsWith('status:'));
+      if(stLine) status = stLine.replace(/.*status:/i,'').trim();
+      if(!['me','mom','other'].includes(status)) status = descToStatus(desc);
+      if(!status) status = titleToStatus(summ);
+      if(!status){
+        const cb = summ+' '+desc;
+        if(cb.includes('אצלי')||cb.includes('אצל אבא')||cb.includes('אבא')) status='me';
+        else if(cb.includes('אצל אמא')||cb.includes('אמא')) status='mom';
+        else if(cb.includes('אחר')) status='other';
+      }
+      if(!status && summ.includes(childName)) status='me';
+      if(!status) continue;
+      const note = desc.split('\n')
+        .filter(l=>l&&!l.includes(APP_TAG)&&!l.trim().startsWith('status:')&&!l.startsWith('✡️'))
+        .join(' ').trim();
+      gcalData[dateStr] = {status, note, gcalId: ev.id};
+    }
+
+    const gcalCount  = Object.keys(gcalData).length;
+    const localCount = Object.keys(dayData).length;
+    dbg(`GCal=${gcalCount} Local=${localCount}`);
+
+    // Simply pull from GCal — GCal is master
+    applyGcalData(gcalData);
+    setSyncBar('ok',`✓ Synced ${gcalCount} events from Google Calendar · ${new Date().toLocaleTimeString('he-IL')}`);
+    updateAuthPill();
+    fetchIsraelHolidays(); // pull live holidays from GCal
+
+    // Always pull from GCal on connect — GCal is master
+    // Only show suggestion if local has events GCal doesn't (user might lose data)
+    const localOnlyCount = Object.keys(dayData).filter(k=>!Object.keys(gcalData).includes(k)).length;
+    if(localOnlyCount > 0){
+      showPostLoginSuggestion(gcalCount, localCount);
+    }
+
+  } catch(e){
+    dbg('smartSync error: '+e.message,'err');
+    setSyncBar('err','Sync error: '+e.message);
+  }
+}
+
+function applyGcalData(gcalData){
+  const newDayData={}, newGcalIds={};
+  for(const [dateStr,d] of Object.entries(gcalData)){
+    newDayData[dateStr]={status:d.status,note:d.note};
+    newGcalIds[dateStr]=d.gcalId;
+  }
+  dayData=newDayData; gcalIds=newGcalIds;
+  localStorage.setItem('dayData',JSON.stringify(dayData));
+  localStorage.setItem('gcalIds',JSON.stringify(gcalIds));
+  render();
+}
+
+// Show suggestion after login — user picks what to do
+function showPostLoginSuggestion(gcalCount, localCount){
+  // Only show if this looks like a meaningful choice situation
+  document.getElementById('plGcalCount').textContent  = gcalCount;
+  document.getElementById('plLocalCount').textContent = localCount;
+  document.getElementById('postLoginOv').classList.add('open');
+}
+
+async function postLoginChoice(choice){
+  document.getElementById('postLoginOv').classList.remove('open');
+  if(choice==='gcal'){
+    dbg('Choice: GCal master — already applied','ok');
+    showToast('✅ Google Calendar is master');
+  } else if(choice==='local'){
+    dbg('Choice: Upload local to GCal','info');
+    setSyncBar('busy','Uploading local events to Google Calendar...');
+    // Merge: keep GCal data + add local on top
+    const localSnapshot = JSON.parse(localStorage.getItem('dayData')||'{}');
+    let uploaded=0;
+    for(const [dateStr,d] of Object.entries(localSnapshot)){
+      if(!['me','mom','other'].includes(d.status)) continue;
+      try{ await gcalWriteDay(dateStr,d.status,d.note||''); uploaded++; }
+      catch(e){ dbg('upload err: '+e.message,'err'); }
+    }
+    setSyncBar('ok',`✓ Uploaded ${uploaded} local events`);
+    showToast(`✅ Uploaded ${uploaded} events to Google Calendar`);
+    // Re-sync to get merged state
+    setTimeout(()=>syncAll(), 1500);
+  } else if(choice==='safe'){
+    dbg('Choice: Safe mode — never delete old GCal events','ok');
+    localStorage.setItem('safeMode','1');
+    showToast('✅ Safe mode on — events older than 1 month protected');
+  }
+}
+
+
+async function resolveSync(choice){
+  document.getElementById('syncChoiceOv').classList.remove('open');
+  const gcalData = window._pendingGcalData || {};
+
+  if(choice === 'gcal'){
+    dbg('User chose: GCal wins','info');
+    applyGcalData(gcalData);
+    setSyncBar('ok',`✓ ${Object.keys(gcalData).length} events from Google Calendar`);
+
+  } else if(choice === 'local'){
+    dbg('User chose: Local wins — uploading to GCal','info');
+    setSyncBar('busy','Uploading local data to Google Calendar...');
+    let uploaded = 0;
+    for(const [dateStr, d] of Object.entries(dayData)){
+      try{ await gcalWriteDay(dateStr, d.status, d.note||''); uploaded++; } catch(e){ dbg('upload err: '+e.message,'err'); }
+    }
+    setSyncBar('ok',`✓ Uploaded ${uploaded} local events to Google Calendar`);
+
+  } else { // merge
+    dbg('User chose: Merge (local wins on conflict)','info');
+    const merged = {...gcalData};
+    // Apply GCal data first, then overlay local (local wins)
+    const newDayData = {}, newGcalIds = {};
+    for(const [k,v] of Object.entries(gcalData)){ newDayData[k]={status:v.status,note:v.note}; newGcalIds[k]=v.gcalId; }
+    for(const [k,v] of Object.entries(dayData)){ newDayData[k]=v; } // local overwrites
+    dayData  = newDayData;
+    gcalIds  = newGcalIds;
+    localStorage.setItem('dayData', JSON.stringify(dayData));
+    localStorage.setItem('gcalIds', JSON.stringify(gcalIds));
+    render();
+    setSyncBar('ok',`✓ Merged: ${Object.keys(dayData).length} total events`);
+  }
+  updateAuthPill();
+  window._pendingGcalData = null;
+}
+function handleSyncBarClick(){
+  // If last action was a save, open GCal to verify; otherwise do sync
+  if(window._lastSavedKey){
+    const d = window._lastSavedKey;
+    window.open(`https://calendar.google.com/calendar/r/day/${d.replace(/-/g,'/')}`, '_blank');
+  } else {
+    manualSync();
+  }
+}
+
+// ── DEBUG LOG ──
+let _dbgLines = [];
+function dbg(msg, type='info'){
+  console.log('[משמורת]', msg);
+  if(!debugEnabled) return;
+  _dbgLines.push({msg, type, t: new Date().toLocaleTimeString('he-IL')});
+  if(_dbgLines.length > 60) _dbgLines.shift();
+  const p = document.getElementById('debugPanel');
+  if(p){
+    p.style.display = 'block';
+    p.innerHTML = _dbgLines.slice().reverse().map(l=>
+      `<div class="debug-line-${l.type}">[${l.t}] ${l.msg}</div>`
+    ).join('');
+  }
+}
+
+
+function setSyncBar(state,txt){
+  const b=document.getElementById('syncBar');
+  b.className='sync-bar'+(state==='ok'?' ok':state==='err'?' err':state==='busy'?' busy':'');
+  document.getElementById('syncTxt').textContent=txt;
+}
+
+// ═══════════════════════════════════════════
+//  SAVE DAY
+// ═══════════════════════════════════════════
+async function saveDay(){
+  if(!selDay) return;
+  if(!curStatus){ showToast('⚠️ בחר סטטוס'); return; }
+  const key  = dk(curY,curM,selDay);
+  const note = document.getElementById('mNote').value.trim();
+
+  // 1. Save locally immediately — always works
+  dbg(`saveDay: key=${key} status=${curStatus} token=${!!accessToken}`);
+  dayData[key] = {status:curStatus, note};
+  localStorage.setItem('dayData', JSON.stringify(dayData));
+  const savedStatus = curStatus; // capture before closeModal resets it
+  const savedNote   = note;
+  closeModal(); render();
+  showToast('✅ נשמר');
+
+  // 2. Write to Google Calendar in background
+  if(accessToken || tokenClient){
+    setSyncBar('busy','Saving to Google Calendar...');
+    try{
+      const ok = await ensureToken();
+      dbg(`ensureToken: ${ok} token=${accessToken ? accessToken.substring(0,12)+'...' : 'null'}`);
+      if(!ok){ setSyncBar('err','Not connected — tap 🔗'); dbg('No token!','err'); return; }
+      dbg(`Writing: ${key} status=${savedStatus}`, 'info');
+      await gcalWriteDay(key, savedStatus, savedNote);
+      dbg(`✓ Written to GCal: ${key} as "${savedStatus}"`, 'ok');
+      window._lastSavedKey = key;
+      dbg('Open calendar.google.com to verify — look in "משמורת — ימי הילד"', 'ok');
+      // Show clickable link to GCal
+      const gcalLink = `https://calendar.google.com/calendar/r/day/${key.replace(/-/g,'/')}`;
+      dbg(`Direct link: ${gcalLink}`, 'ok');
+      setSyncBar('ok',`✓ Saved to "משמורת" · ${new Date().toLocaleTimeString('he-IL')} — tap to verify`);
+      render();
+    } catch(e){
+      dbg(`saveDay error: ${e.message}`, 'err');
+      console.error('saveDay GCal error:', e);
+      setSyncBar('err','Save error: '+e.message);
+    }
+  } else {
+    dbg('No token and no tokenClient — local only', 'err');
+    setSyncBar('off','Saved locally — tap 🔗 to sync');
+  }
+}
+
+async function clearDay(){
+  if(!selDay) return;
+  const key = dk(curY,curM,selDay);
+  delete dayData[key];
+  localStorage.setItem('dayData', JSON.stringify(dayData));
+  closeModal(); render();
+  showToast('🗑️ נוקה');
+  if(accessToken && gcalIds[key]){
+    try{ await gcalDeleteDay(key); } catch(_){}
+  }
+}
+
+// ═══════════════════════════════════════════
+//  MULTI-SELECT SAVE
+// ═══════════════════════════════════════════
+async function applyMultiSave(){
+  if(!msStatus){ showToast('⚠️ בחר סטטוס'); return; }
+  // Capture everything BEFORE closing modal (closing resets msStatus & picked)
+  const status = msStatus;
+  const note   = document.getElementById('msNote').value.trim();
+  const keys   = [...picked].sort();
+
+  dbg(`multiSave: ${keys.length} days status=${status} token=${!!accessToken}`);
+
+  // Save all locally
+  for(const key of keys) dayData[key]={status, note};
+  localStorage.setItem('dayData',JSON.stringify(dayData));
+
+  // Close UI
+  closeMsModal(); picked.clear(); if(selectMode) toggleSelectMode();
+  render(); showToast(`✅ ${keys.length} ימים נשמרו`);
+
+  // Write each day to GCal
+  if(accessToken || tokenClient){
+    setSyncBar('busy',`Saving ${keys.length} days to Google Calendar...`);
+    const tokenOk = await ensureToken();
+    if(!tokenOk){ setSyncBar('err','Not connected — tap 🔗'); dbg('No token for multi-save','err'); return; }
+    let saved=0, fail=0;
+    for(const key of keys){
+      try{
+        await gcalWriteDay(key, status, note);
+        dbg(`✓ Saved ${key}`, 'ok');
+        saved++;
+      } catch(e){
+        dbg(`✗ Failed ${key}: ${e.message}`, 'err');
+        fail++;
+      }
+    }
+    const msg = fail>0 ? `${saved} saved, ${fail} failed` : `✓ ${saved} days saved to "משמורת"`;
+    setSyncBar(fail>0?'err':'ok', msg);
+    dbg(msg, fail>0?'err':'ok');
+    render();
+  } else {
+    dbg('No token — saved locally only','err');
+    setSyncBar('off','Saved locally — tap 🔗 to sync');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════
+function openModal(d){
+  if(selectMode){ togglePick(d); return; }
+  selDay=d;
+  const key=dk(curY,curM,d);
+  const data=dayData[key]||{};
+  curStatus=data.status||null;
+  const hol=getHoliday(curY,curM,d);
+  document.getElementById('mDate').textContent=`${d} ${MONTHS[curM]} ${curY}`;
+  document.getElementById('mHeb').textContent =getHebDate(new Date(curY,curM,d));
+  document.getElementById('mNote').value      =data.note||'';
+  document.getElementById('saveStatus').textContent = gcalIds[key]?'📅 כבר ב-Google Calendar':'';
+  const tag=document.getElementById('mHolTag');
+  if(hol){document.getElementById('mHolName').textContent=hol;tag.classList.add('show');}
+  else tag.classList.remove('show');
+  updateSBs();
+  document.getElementById('ov').classList.add('open');
+}
+function hideCurrentHoliday(){
+  if(!selDay) return;
+  const name=JH[dk(curY,curM,selDay)];
+  if(!name) return;
+  hiddenHolidays.add(name);
+  localStorage.setItem('hiddenHolidays',JSON.stringify([...hiddenHolidays]));
+  document.getElementById('mHolTag').classList.remove('show');
+  render();
+  showToast('✅ "'+name+'" הוסתר לתמיד');
+}
+function unhideHoliday(name){
+  hiddenHolidays.delete(name);
+  localStorage.setItem('hiddenHolidays',JSON.stringify([...hiddenHolidays]));
+  render();
+  showToast('✅ "'+name+'" שוחזר');
+}
+function restoreAllHolidays(){
+  hiddenHolidays.clear();
+  localStorage.removeItem('hiddenHolidays');
+  render();
+  showToast('✅ כל החגים שוחזרו');
+}
+function closeModal(){document.getElementById('ov').classList.remove('open');selDay=null;curStatus=null;}
+function closeBg(e){if(e.target===document.getElementById('ov'))closeModal();}
+function pickStatus(s){curStatus=curStatus===s?null:s;updateSBs();}
+function updateSBs(){['me','mom','other'].forEach(s=>{document.getElementById('sb-'+s).className='sb'+(curStatus===s?' a-'+s:'');});}
+
+// ═══════════════════════════════════════════
+//  MULTI SELECT
+// ═══════════════════════════════════════════
+function toggleSelectMode(){
+  selectMode=!selectMode; picked.clear();
+  const btn=document.getElementById('selectToggle');
+  const hint=document.getElementById('selHint');
+  if(selectMode){btn.classList.add('active');btn.textContent='✕ בטל';hint.style.display='block';}
+  else{btn.classList.remove('active');btn.textContent='☑️ בחר';hint.style.display='none';document.getElementById('selToolbar').classList.remove('show');}
+  render();
+}
+function togglePick(d){const key=dk(curY,curM,d);picked.has(key)?picked.delete(key):picked.add(key);updateSelToolbar();render();}
+function updateSelToolbar(){const tb=document.getElementById('selToolbar');if(picked.size>0){tb.classList.add('show');document.getElementById('selCount').textContent=`${picked.size} נבחרו`;}else tb.classList.remove('show');}
+function applyMulti(status){
+  if(!picked.size){showToast('⚠️ לא נבחרו ימים');return;}
+  msStatus=status;
+  document.getElementById('msTitle').textContent=`החל על ${picked.size} ימים`;
+  document.getElementById('msSub').textContent=[...picked].sort().map(k=>{const[,m,d]=k.split('-');return`${parseInt(d)}/${parseInt(m)}`;}).join(' · ');
+  document.getElementById('msNote').value='';
+  ['me','mom','other'].forEach(s=>document.getElementById('msb-'+s).className='sb'+(msStatus===s?' a-'+s:''));
+  document.getElementById('msOv').classList.add('open');
+}
+function msPick(s){msStatus=s;['me','mom','other'].forEach(ss=>document.getElementById('msb-'+ss).className='sb'+(msStatus===ss?' a-'+ss:''));}
+function clearMulti(){for(const k of picked){delete dayData[k];}localStorage.setItem('dayData',JSON.stringify(dayData));showToast(`🗑️ ${picked.size} ימים נוקו`);picked.clear();if(selectMode)toggleSelectMode();render();}
+function closeMsModal(){document.getElementById('msOv').classList.remove('open');msStatus=null;}
+function closeMsBg(e){if(e.target===document.getElementById('msOv'))closeMsModal();}
+
+// ═══════════════════════════════════════════
+//  NAME MODAL
+// ═══════════════════════════════════════════
+function openNameModal(){document.getElementById('nameInp').value=childName;document.getElementById('nameOv').classList.add('open');}
+function closeNameModal(){document.getElementById('nameOv').classList.remove('open');}
+function closeNameBg(e){if(e.target===document.getElementById('nameOv'))closeNameModal();}
+function saveName(){const v=document.getElementById('nameInp').value.trim();if(v){childName=v;localStorage.setItem('childName',childName);render();showToast('✅ '+childName);}closeNameModal();}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+const MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+function render(){
+  document.getElementById('mLabel').textContent=`${MONTHS[curM]} ${curY}`;
+  document.getElementById('childPill').textContent='👶 '+childName;
+  renderCal();renderStats();renderHols();
+}
+function renderCal(){
+  const grid=document.getElementById('daysGrid'); grid.innerHTML='';
+  const today=new Date(); const start=new Date(curY,curM,1).getDay(); const dim=new Date(curY,curM+1,0).getDate();
+  const icons={me:'👨',mom:'👩',other:'✈️'};
+  for(let i=0;i<start;i++){const e=document.createElement('div');e.className='dc empty';grid.appendChild(e);}
+  for(let d=1;d<=dim;d++){
+    const dow=new Date(curY,curM,d).getDay(); const key=dk(curY,curM,d); const data=dayData[key]||{}; const hol=getHoliday(curY,curM,d);
+    const isTd=today.getFullYear()===curY&&today.getMonth()===curM&&today.getDate()===d;
+    const c=document.createElement('div'); c.className='dc';
+    if(isTd)c.classList.add('today'); if(dow===5||dow===6)c.classList.add('shab-cell');
+    const validStatus = ['me','mom','other'].includes(data.status);
+    if(validStatus)c.classList.add('s-'+data.status); if(gcalIds[key])c.classList.add('gcal'); if(picked.has(key))c.classList.add('picked');
+    if(hol)c.classList.add('is-holiday');
+    const icon = icons[data.status];
+    const shortHol = hol ? hol.replace('ראש השנה (ב)','ר"ה ב').replace('הושענא רבה','הוש"ר').replace('שמיני עצרת','שמ"ע').replace('שמחת תורה','שמח"ת') : '';
+    c.innerHTML=`${hol?`<div class="hd">✡</div>`:''}` +
+      `<div class="dn">${d}</div>` +
+      `${icon&&!hol?`<div class="si">${icon}</div>`:''}` +
+      `${hol?`<div class="hol-name">${shortHol||hol}</div>`:''}`;
+    c.onclick=()=>openModal(d); grid.appendChild(c);
+  }
+}
+function renderStats(){
+  const dim=new Date(curY,curM+1,0).getDate(); const c={me:0,mom:0,other:0};
+  for(let d=1;d<=dim;d++){const s=(dayData[dk(curY,curM,d)]||{}).status;if(s&&c[s]!==undefined)c[s]++;}
+  document.getElementById('statsBars').innerHTML=[{l:'👨 אצלי',col:'var(--me)',n:c.me},{l:'👩 אמא',col:'var(--mom)',n:c.mom},{l:'✈️ אחר',col:'var(--other)',n:c.other}]
+    .map(r=>`<div class="stat-row"><div class="stat-label">${r.l}</div><div class="stat-bar-wrap"><div class="stat-bar" style="width:${(r.n/dim*100).toFixed(1)}%;background:${r.col}"></div></div><div class="stat-count" style="color:${r.col}">${r.n}</div></div>`).join('');
+}
+function renderHols(){
+  const dim=new Date(curY,curM+1,0).getDate(); const list=[]; const hidden=[];
+  for(let d=1;d<=dim;d++){
+    const key=dk(curY,curM,d); const rawH=JH[key];
+    if(rawH){ if(hiddenHolidays.has(rawH)) hidden.push({d,h:rawH}); else list.push({d,h:rawH}); }
+  }
+  const hiddenInMonth = hidden.length > 0;
+  const restoreBtn = document.getElementById('restoreHolBtn');
+  if(restoreBtn) restoreBtn.style.display = hiddenHolidays.size>0 ? 'inline-block' : 'none';
+  let html = list.length ? list.map(x=>`<div class="hol-item"><div class="hol-date">${x.d}/${curM+1}</div><div>${x.h}</div></div>`).join('') : '<div style="font-size:12px;color:var(--muted)">אין חגים החודש</div>';
+  if(hiddenInMonth){
+    const chips = hidden.map(x=>`<span onclick="unhideHoliday('${x.h}')" style="display:inline-flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--muted);cursor:pointer;margin:2px">${x.h} <span style="color:var(--holiday);font-weight:700">↩</span></span>`).join('');
+    html += `<div style="margin-top:8px;font-size:10px;color:var(--muted);margin-bottom:3px">מוסתרים — לחץ לשחזור:</div><div style="display:flex;flex-wrap:wrap;gap:2px">${chips}</div>`;
+  }
+  document.getElementById('holList').innerHTML=html;
+}
+function go(dir){curM+=dir;if(curM>11){curM=0;curY++;}if(curM<0){curM=11;curY--;}picked.clear();if(selectMode)updateSelToolbar();render();}
+
+// ═══════════════════════════════════════════
+//  XLS
+// ═══════════════════════════════════════════
+function exportXLS(){
+  const lbl={me:'אצלי (אבא)',mom:'אצל אמא',other:'אחר'};
+  const clr={me:'#bdd7ee',mom:'#f4b8b8',other:'#ffe699'};
+  const rows=Object.keys(dayData).sort().map(k=>{
+    const[y,m,d]=k.split('-'); const data=dayData[k];
+    const dow=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][new Date(+y,+m-1,+d).getDay()];
+    const hol=getHoliday(+y,+m-1,+d)||''; const gcal=gcalIds[k]?'✓':'';
+    return{k,y,m,d,dow,status:data.status,lbl:lbl[data.status]||'',note:data.note||'',hol,gcal,bg:clr[data.status]||'#f2f2f2'};
+  });
+  let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>
+  <table dir="rtl" border="1" style="font-family:Arial;font-size:12px;border-collapse:collapse">
+  <tr><td colspan="7" style="background:#1f3864;color:#fff;font-size:15px;font-weight:bold;padding:8px;text-align:center">משמורת — ${childName} — ${new Date().toLocaleDateString('he-IL')}</td></tr>
+  <tr>${['תאריך','יום','סטטוס','הערה','חג','GCal'].map(h=>`<td style="background:#2e4057;color:#fff;font-weight:bold;padding:6px 10px">${h}</td>`).join('')}</tr>`;
+  rows.forEach((r,i)=>{
+    const bg=i%2===0?r.bg:r.bg+'cc';
+    html+=`<tr><td style="background:${bg};padding:5px 9px">${parseInt(r.d)}/${parseInt(r.m)}/${r.y}</td><td style="background:${bg};padding:5px 9px">${r.dow}</td><td style="background:${bg};padding:5px 9px">${r.lbl}</td><td style="background:${bg};padding:5px 9px">${r.note}</td><td style="background:${bg};padding:5px 9px">${r.hol}</td><td style="background:${bg};padding:5px 9px;text-align:center">${r.gcal}</td></tr>`;
+  });
+  const tot=rows.length; const cm=rows.filter(r=>r.status==='me').length; const cmom=rows.filter(r=>r.status==='mom').length; const co=rows.filter(r=>r.status==='other').length;
+  html+=`<tr><td colspan="2" style="background:#1f3864;color:#fff;font-weight:bold;padding:6px">סיכום</td><td style="background:#bdd7ee;font-weight:bold;padding:6px">👨 ${cm}</td><td style="background:#f4b8b8;font-weight:bold;padding:6px">👩 ${cmom}</td><td style="background:#ffe699;font-weight:bold;padding:6px">✈️ ${co}</td><td style="background:#1f3864;color:#fff;font-weight:bold;padding:6px">סה"כ ${tot}</td></tr>`;
+  html+='</table></body></html>';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'}));
+  a.download=`משמורת-${childName}-${new Date().toISOString().slice(0,10)}.xls`; a.click();
+  showToast(`📊 ייוצאו ${rows.length} ימים`);
+}
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function titleToStatus(t){
+  if(!t) return null;
+  if(t.includes('אצל אבא')||t.includes('אצלי')||t.includes('אבא'))return'me';
+  if(t.includes('אצל אמא')||t.includes('אמא'))return'mom';
+  if(t.includes('אחר')||t.includes('other'))return'other';
+  return null;
+}
+function descToStatus(desc){
+  // Read any line that is exactly a status keyword (Hebrew or English)
+  for(const line of desc.split('\n')){
+    const l = line.trim();
+    if(l==='אצלי'||l==='me')   return'me';
+    if(l==='אצל אמא'||l==='mom') return'mom';
+    if(l==='אחר'||l==='other')  return'other';
+  }
+  return null;
+}
+function showToast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+
+// ═══════════════════════════════════════════
+//  HEBREW DATE
+// ═══════════════════════════════════════════
+const HM=['תשרי','חשון','כסלו','טבת','שבט','אדר','ניסן','אייר','סיון','תמוז','אב','אלול'];
+const HN=['','א','ב','ג','ד','ה','ו','ז','ח','ט','י','יא','יב','יג','יד','טו','טז','יז','יח','יט','כ','כא','כב','כג','כד','כה','כו','כז','כח','כט','ל'];
+function getHebDate(g){try{return jdH(gjd(g.getFullYear(),g.getMonth()+1,g.getDate()));}catch(e){return'';}}
+function gjd(y,m,d){if(m<=2){y--;m+=12;}const A=Math.floor(y/100);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+(2-A+Math.floor(A/4))-1524.5;}
+function isLH(y){return((7*y+1)%19)<7;}
+function dHM(m,y){if([2,4,6,10,13].includes(m))return 29;if(m===9)return(hys(y+1)-hys(y)>355)?30:29;return 30;}
+function hys(y){let d=0;const mo=isLH(y)?13:12;for(let m=7;m<=mo;m++)d+=dHM(m,y-1);for(let m=1;m<7;m++)d+=dHM(m,y);const p=(d%7+Math.floor(d*765433/492480)+1)%7;return 347997+365.25*(y-1)+([0,0,1,2,0,0,1][p]||0);}
+function jdH(jd){const j0=Math.floor(jd)+.5;let c=Math.floor((j0-347997)/365.25),f=hys(c);while(f>j0){c--;f=hys(c);}while(hys(c+1)<=j0)c++;const ys=hys(c);let mo=7,ms=ys;for(let m=7;m<=13;m++){const nx=ms+dHM(m,c);if(nx>j0)break;ms=nx;mo=m+1;if(m===13){mo=1;}}if(mo>13)mo-=13;if(mo<7){for(let m=1;m<7;m++){const nx=ms+dHM(m,c);if(nx>j0)break;ms=nx;mo=m+1;}}const day=Math.floor(j0-ms)+1;return`${HN[day]||day} ${HM[(mo-1+12)%12]}`;}
+
+// ═══════════════════════════════════════════
+//  HOLIDAYS — live from "Holidays in Israel" GCal
+// ═══════════════════════════════════════════
+// Populated by fetchIsraelHolidays() after login. Persisted to localStorage.
+let JH = JSON.parse(localStorage.getItem('israelHolidays') || '{}');
+function getHoliday(y,m,d){const name=JH[dk(y,m,d)];return (name && !hiddenHolidays.has(name)) ? name : null;}
+
+async function fetchIsraelHolidays(){
+  if(!accessToken) return;
+  try{
+    const calList = await apiCall('GET',`${GCAL_API}/users/me/calendarList`);
+    const holCal = (calList.items||[]).find(x=>
+      x.summary==='Holidays in Israel' ||
+      x.summary==='חגים בישראל' ||
+      (x.id && x.id.includes('jewish#holiday'))
+    );
+    if(!holCal){ dbg('Holidays in Israel calendar not found','err'); return; }
+    dbg('Found holidays calendar: "'+holCal.summary+'"','ok');
+
+    const now  = new Date();
+    const from = new Date(now.getFullYear()-1,0,1).toISOString();
+    const to   = new Date(now.getFullYear()+3,11,31).toISOString();
+    const url  = `${GCAL_API}/calendars/${encodeURIComponent(holCal.id)}/events`
+               + `?timeMin=${from}&timeMax=${to}&singleEvents=true&maxResults=2500`;
+    const data = await apiCall('GET', url);
+    const items = (data.items||[]).filter(e=>e.status!=='cancelled' && e.start?.date);
+    dbg('Fetched '+items.length+' holiday events', 'ok');
+
+    const newJH = {};
+    for(const ev of items){ newJH[ev.start.date] = ev.summary || ''; }
+    JH = newJH;
+    localStorage.setItem('israelHolidays', JSON.stringify(JH));
+    render();
+    dbg('Holidays updated: '+Object.keys(JH).length+' days', 'ok');
+  } catch(e){
+    dbg('fetchIsraelHolidays error: '+e.message, 'err');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+(function(){
+  // ── Check for OAuth redirect token (mobile flow) ──
+  const hadRedirectToken = checkRedirectToken();
+  // Restore debug toggle state
+  if(debugEnabled){
+    const btn = document.getElementById('debugToggle');
+    if(btn){ btn.style.opacity='1'; btn.style.borderColor='#f97070'; btn.style.color='#f97070'; }
+  }
+
+  // Clean up any corrupt entries with undefined/invalid status
+  const VALID = ['me','mom','other'];
+  let cleaned = false;
+  for(const key of Object.keys(dayData)){
+    if(!VALID.includes(dayData[key]?.status)){
+      delete dayData[key];
+      cleaned = true;
+    }
+  }
+  if(cleaned){ localStorage.setItem('dayData', JSON.stringify(dayData)); }
+  // Pre-fill saved client ID
+  if(clientId) document.getElementById('clientIdInp').value = clientId;
+  if(childName) document.getElementById('wName').value = childName;
+
+  if(childName){
+    // Returning user — show app immediately
+    document.getElementById('welcome').style.display='none';
+    document.getElementById('app').style.display='block';
+    updateAuthPill();
+    render();
+
+    if(hadRedirectToken){
+      // Just came back from Google redirect auth — token already set
+      updateAuthPill();
+      setSyncBar('busy','Connected — syncing...');
+      smartSync();
+    } else if(clientId){
+      setSyncBar('busy','Reconnecting...');
+      // Try silent token refresh once GIS is ready
+      const waitGIS = setInterval(()=>{
+        if(window.google?.accounts?.oauth2){
+          clearInterval(waitGIS);
+          initTokenClient(false);
+          setTimeout(()=>{
+            if(!tokenClient){ setSyncBar('off','Tap 🔗 to connect'); return; }
+            const orig = tokenClient.callback;
+            tokenClient.callback = resp => {
+              tokenClient.callback = orig;
+              if(!resp.error){
+                accessToken = resp.access_token;
+                tokenExpiry  = Date.now()+(resp.expires_in||3600)*1000-60000;
+                updateAuthPill();
+                smartSync();
+              } else {
+                setSyncBar('off','Session expired — tap 🔗 to reconnect');
+              }
+            };
+            tokenClient.requestAccessToken({prompt:''});
+        // Note: on mobile this won't work — mobile uses redirect flow
+          }, 400);
+        }
+      }, 200);
+      setTimeout(()=>{ if(!accessToken) setSyncBar('off','Tap 🔗 to connect'); }, 8000);
+    } else {
+      setSyncBar('off','No Client ID — tap 🔗 to connect');
+    }
+  }
+  // New user — welcome screen stays visible
+})();
+</script>
+</body>
+</html>
