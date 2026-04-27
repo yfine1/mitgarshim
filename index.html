@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>משמורת v6.0</title>
+<title>משמורת v6.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -257,7 +257,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 <div id="welcome">
   <div class="w-logo">👨‍👧</div>
   <div class="w-title">משמורת</div>
-  <div class="w-sub">לוח שנה ימי משמורת<br>עם סנכרון Google Calendar אמיתי<br><span style="font-size:12px;color:#56c99a;font-weight:700">v6.0</span></div>
+  <div class="w-sub">לוח שנה ימי משמורת<br>עם סנכרון Google Calendar אמיתי<br><span style="font-size:12px;color:#56c99a;font-weight:700">v6.1</span></div>
   <div class="w-card">
     <h3>👶 שם הילד/ה</h3>
     <input class="fi" id="wName" placeholder="למשל: נועם" />
@@ -276,7 +276,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 <!-- ════════ APP ════════ -->
 <div id="app">
   <header>
-    <div class="app-title">👨‍👧 משמורת &nbsp;<span id="vbadge" style="font-size:12px;color:#56c99a;font-weight:900;letter-spacing:0">v6.0</span></div>
+    <div class="app-title">👨‍👧 משמורת &nbsp;<span id="vbadge" style="font-size:12px;color:#56c99a;font-weight:900;letter-spacing:0">v6.1</span></div>
     <div class="hdr-btns">
       <div class="pill" id="childPill" onclick="openNameModal()">👶 ...</div>
       <div class="pill" onclick="exportXLS()">📊</div>
@@ -478,7 +478,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 
 <script>
 'use strict';
-console.log('משמורת v6.0 loaded — origin:', window.location.origin, '— UA:', navigator.userAgent.substring(0,80));
+console.log('משמורת v6.1 loaded — origin:', window.location.origin, '— UA:', navigator.userAgent.substring(0,80));
 // ═══════════════════════════════════════════
 //  CONSTANTS
 // ═══════════════════════════════════════════
@@ -498,13 +498,11 @@ let tokenExpiry= 0;
 let tokenClient= null;
 
 let dayData    = JSON.parse(localStorage.getItem('dayData')   || '{}');
-let hiddenHolidays = (()=>{
-  const raw = JSON.parse(localStorage.getItem('hiddenHolidays') || '[]');
-  // Migrate old date-key format ("2026-04-22") to name format — discard old keys
-  const names = raw.filter(x => !/^\d{4}-\d{2}-\d{2}$/.test(x));
-  if(names.length !== raw.length) localStorage.setItem('hiddenHolidays', JSON.stringify(names));
-  return new Set(names);
-})();
+// hiddenHolidays: stored in Google Calendar as special events (appProperties.mitgarshimHidden)
+// Falls back to localStorage cache so UI works offline / before first sync
+let hiddenHolidays = new Set(JSON.parse(localStorage.getItem('hiddenHolidays') || '[]'));
+// gcalHiddenIds: maps holiday name → GCal event id (so we can delete/restore)
+let gcalHiddenIds = JSON.parse(localStorage.getItem('gcalHiddenIds') || '{}');
 let gcalIds    = JSON.parse(localStorage.getItem('gcalIds')   || '{}'); // key -> gcal event id
 
 let curY = new Date().getFullYear();
@@ -638,13 +636,14 @@ function handleToken(resp){
   accessToken = resp.access_token;
   tokenExpiry  = Date.now() + (resp.expires_in||3600)*1000 - 60000;
   localStorage.setItem('sessionStart', Date.now().toString());
-  // Hide welcome, show app, start smart sync
+  // Hide welcome, show app
   document.getElementById('welcome').style.display='none';
   document.getElementById('app').style.display='block';
   updateAuthPill();
   render();
   setSyncBar('busy','Connected — syncing from Google Calendar...');
-  smartSync();
+  // Load hidden holidays BEFORE smartSync so they are never visible on new device
+  smartSync().then(()=> loadHiddenFromGCal());
 }
 
 function showApp(withSync){
@@ -652,7 +651,7 @@ function showApp(withSync){
   document.getElementById('app').style.display='block';
   updateAuthPill();
   render();
-  if(withSync && accessToken) smartSync();
+  if(withSync && accessToken) smartSync().then(()=>loadHiddenFromGCal());
   else if(!accessToken) setSyncBar('off','Not connected — tap 🔗');
 }
 
@@ -991,6 +990,7 @@ async function syncAll(){
     setSyncBar('ok',`✓ ${merged} events from "${mishCal.summary}" · ${new Date().toLocaleTimeString('he-IL')}`);
     updateAuthPill();
     fetchIsraelHolidays(); // pull live holidays from GCal
+    loadHiddenFromGCal();   // restore cross-device hidden holidays
   } catch(e){
     console.error('syncAll error:', e);
     setSyncBar('err','Sync error: '+e.message);
@@ -1341,27 +1341,63 @@ function openModal(d){
   updateSBs();
   document.getElementById('ov').classList.add('open');
 }
-function hideCurrentHoliday(){
+async function hideCurrentHoliday(){
   if(!selDay) return;
   const name=JH[dk(curY,curM,selDay)];
   if(!name) return;
+  // Optimistic local update
   hiddenHolidays.add(name);
   localStorage.setItem('hiddenHolidays',JSON.stringify([...hiddenHolidays]));
   document.getElementById('mHolTag').classList.remove('show');
   render();
-  showToast('✅ "'+name+'" הוסתר לתמיד');
+  showToast('✅ "'+name+'" הוסתר');
+  // Persist to GCal so it survives new devices / next year
+  if(accessToken && calendarId){
+    try{
+      const ev = await apiCall('POST',`${GCAL_API}/calendars/${encodeURIComponent(calendarId)}/events`,{
+        summary: '🚫 '+name,
+        description: 'mitgarshim-hidden-holiday|'+name,
+        start:{date:'2000-01-01'}, end:{date:'2000-01-02'},
+        extendedProperties:{ private:{ mitgarshimHidden:'true', holidayName: name } }
+      });
+      gcalHiddenIds[name] = ev.id;
+      localStorage.setItem('gcalHiddenIds', JSON.stringify(gcalHiddenIds));
+      dbg('Hid holiday in GCal: "'+name+'" id='+ev.id,'ok');
+    } catch(e){ dbg('hideCurrentHoliday GCal err: '+e.message,'err'); }
+  }
 }
-function unhideHoliday(name){
+async function unhideHoliday(name){
   hiddenHolidays.delete(name);
   localStorage.setItem('hiddenHolidays',JSON.stringify([...hiddenHolidays]));
   render();
   showToast('✅ "'+name+'" שוחזר');
+  // Remove marker event from GCal
+  if(accessToken && calendarId && gcalHiddenIds[name]){
+    try{
+      await apiCall('DELETE',`${GCAL_API}/calendars/${encodeURIComponent(calendarId)}/events/${gcalHiddenIds[name]}`);
+      delete gcalHiddenIds[name];
+      localStorage.setItem('gcalHiddenIds', JSON.stringify(gcalHiddenIds));
+      dbg('Restored holiday in GCal: "'+name+'"','ok');
+    } catch(e){ dbg('unhideHoliday GCal err: '+e.message,'err'); }
+  }
 }
-function restoreAllHolidays(){
+async function restoreAllHolidays(){
+  const names = [...hiddenHolidays];
   hiddenHolidays.clear();
   localStorage.removeItem('hiddenHolidays');
   render();
   showToast('✅ כל החגים שוחזרו');
+  if(accessToken && calendarId){
+    for(const name of names){
+      if(gcalHiddenIds[name]){
+        try{
+          await apiCall('DELETE',`${GCAL_API}/calendars/${encodeURIComponent(calendarId)}/events/${gcalHiddenIds[name]}`);
+          delete gcalHiddenIds[name];
+        } catch(e){ dbg('restoreAll GCal err: '+e.message,'err'); }
+      }
+    }
+    localStorage.setItem('gcalHiddenIds', JSON.stringify(gcalHiddenIds));
+  }
 }
 function closeModal(){document.getElementById('ov').classList.remove('open');selDay=null;curStatus=null;}
 function closeBg(e){if(e.target===document.getElementById('ov'))closeModal();}
@@ -1548,14 +1584,97 @@ async function fetchIsraelHolidays(){
     const items = (data.items||[]).filter(e=>e.status!=='cancelled' && e.start?.date);
     dbg('Fetched '+items.length+' holiday events', 'ok');
 
+    // ── Filter & deduplicate ──
+    // 1. Skip "Day N of X" continuations — keep only the first day of multi-day holidays
+    //    e.g. keep "Hanukkah" day 1, skip days 2-8; keep "Passover" keep "Passover VII" etc.
+    // 2. Skip purely diaspora-only events (they contain "Diaspora" in the name)
+    // 3. If two events fall on the same date, prefer the shorter/cleaner name
+
+    const SKIP_PATTERNS = [
+      /Diaspora/i,
+      /day\s+[2-9]/i,          // "Day 2", "Day 3" ... "Day 8"
+      /[IVX]+.*day/i,      // Roman numeral day suffixes
+      /\(day\s+\d+\)/i,
+      /ב׳$/, /ג׳$/, /ד׳$/, /ה׳$/, /ו׳$/, /ז׳$/, /ח׳$/,  // Hebrew day suffixes ב-ח
+      /\(ב\)$/, /\(ג\)$/, /\(ד\)$/,
+      / II$/, / III$/, / IV$/, / V$/, / VI$/, / VII$/, / VIII$/,
+    ];
+
+    // Also dedupe by name: once we've seen a holiday name in this fetch window,
+    // only keep subsequent occurrences if they are in a different year
+    const seenNameYear = {};  // "name|year" → true
+
     const newJH = {};
-    for(const ev of items){ newJH[ev.start.date] = ev.summary || ''; }
+    let skipped = 0;
+    for(const ev of items){
+      const name = (ev.summary || '').trim();
+      const date = ev.start.date; // "YYYY-MM-DD"
+      const year = date.substring(0,4);
+
+      // Skip diaspora/continuation noise
+      if(SKIP_PATTERNS.some(p => p.test(name))){ skipped++; continue; }
+
+      // Skip if same holiday name already stored for this year
+      const nameYearKey = name+'|'+year;
+      if(seenNameYear[nameYearKey]){ skipped++; continue; }
+      seenNameYear[nameYearKey] = true;
+
+      // If two events on same date, keep the shorter (cleaner) name
+      if(!newJH[date] || name.length < newJH[date].length){
+        newJH[date] = name;
+      }
+    }
+
     JH = newJH;
     localStorage.setItem('israelHolidays', JSON.stringify(JH));
     render();
-    dbg('Holidays updated: '+Object.keys(JH).length+' days', 'ok');
+    dbg('Holidays updated: '+Object.keys(JH).length+' days (skipped '+skipped+' duplicates/diaspora)', 'ok');
   } catch(e){
     dbg('fetchIsraelHolidays error: '+e.message, 'err');
+  }
+}
+
+// Load hidden-holiday marker events from משמורת calendar
+async function loadHiddenFromGCal(){
+  if(!accessToken || !calendarId) return;
+  try{
+    // Fetch all events and filter by '🚫' prefix — more reliable than privateExtendedProperty
+    const now = new Date();
+    const url = `${GCAL_API}/calendars/${encodeURIComponent(calendarId)}/events`
+              + `?maxResults=2500&singleEvents=true`
+              + `&timeMin=1999-01-01T00:00:00Z&timeMax=2001-01-01T00:00:00Z`;
+    const data = await apiCall('GET', url);
+    const items = (data.items||[]).filter(e=>
+      e.status!=='cancelled' && (e.summary||'').startsWith('🚫')
+    );
+    dbg('loadHiddenFromGCal: found '+items.length+' hidden marker events','info');
+    if(!items.length){
+      // No hidden markers in GCal — clear local cache so nothing is hidden on new device
+      hiddenHolidays = new Set();
+      gcalHiddenIds  = {};
+      localStorage.setItem('hiddenHolidays', '[]');
+      localStorage.setItem('gcalHiddenIds',  '{}');
+      render();
+      return;
+    }
+    const newHidden = new Set();
+    const newIds    = {};
+    for(const ev of items){
+      // Name stored in appProperties.holidayName OR derived from summary by stripping '🚫 '
+      const ep = ev.extendedProperties?.private || ev.appProperties || {};
+      const name = ep.holidayName
+                 || ev.description?.split('|')[1]?.trim()
+                 || ev.summary.replace(/^🚫\s*/,'').trim();
+      if(name){ newHidden.add(name); newIds[name]=ev.id; }
+    }
+    hiddenHolidays = newHidden;
+    gcalHiddenIds  = newIds;
+    localStorage.setItem('hiddenHolidays', JSON.stringify([...hiddenHolidays]));
+    localStorage.setItem('gcalHiddenIds',  JSON.stringify(gcalHiddenIds));
+    dbg('Loaded '+newHidden.size+' hidden holidays from GCal: '+[...newHidden].join(', '),'ok');
+    render();
+  } catch(e){
+    dbg('loadHiddenFromGCal error: '+e.message,'err');
   }
 }
 
