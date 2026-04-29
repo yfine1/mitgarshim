@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>משמורת v6.2</title>
+<title>משמורת v6.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -257,7 +257,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 <div id="welcome">
   <div class="w-logo">👨‍👧</div>
   <div class="w-title">משמורת</div>
-  <div class="w-sub">לוח שנה ימי משמורת<br>עם סנכרון Google Calendar אמיתי<br><span style="font-size:12px;color:#56c99a;font-weight:700">v6.2</span></div>
+  <div class="w-sub">לוח שנה ימי משמורת<br>עם סנכרון Google Calendar אמיתי<br><span style="font-size:12px;color:#56c99a;font-weight:700">v6.3</span></div>
   <div class="w-card">
     <h3>👶 שם הילד/ה</h3>
     <input class="fi" id="wName" placeholder="למשל: נועם" />
@@ -276,7 +276,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 <!-- ════════ APP ════════ -->
 <div id="app">
   <header>
-    <div class="app-title">👨‍👧 משמורת &nbsp;<span id="vbadge" style="font-size:12px;color:#56c99a;font-weight:900;letter-spacing:0">v6.2</span></div>
+    <div class="app-title">👨‍👧 משמורת &nbsp;<span id="vbadge" style="font-size:12px;color:#56c99a;font-weight:900;letter-spacing:0">v6.3</span></div>
     <div class="hdr-btns">
       <div class="pill" id="childPill" onclick="openNameModal()">👶 ...</div>
       <div class="pill" onclick="exportXLS()">📊</div>
@@ -478,7 +478,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:1
 
 <script>
 'use strict';
-console.log('משמורת v6.2 loaded — origin:', window.location.origin, '— UA:', navigator.userAgent.substring(0,80));
+console.log('משמורת v6.3 loaded — origin:', window.location.origin, '— UA:', navigator.userAgent.substring(0,80));
 // ═══════════════════════════════════════════
 //  CONSTANTS
 // ═══════════════════════════════════════════
@@ -1600,24 +1600,45 @@ async function fetchIsraelHolidays(){
         .trim();
     }
 
-    // Debug: log unique raw names to help tune filter
-    const _allNames = [...new Set(items.map(e=>e.summary||'').filter(Boolean))].sort();
-    dbg('Raw holiday names ('+_allNames.length+' unique): '+_allNames.slice(0,30).join(' | '), 'info');
+    // Whitelist: only keep Jewish/Israeli holidays
+    const JEWISH_KW = [
+      'tammuz','tevet','shvat','tu b',"tu'b",'omer',
+      'rosh hashana','rosh ha-shana','yom kippur',
+      'sukkot','sukkoth','hoshana','shmini','simchat',
+      'hanukkah','chanukah','purim','passover','pesach','shavuot','shavuoth',
+      'fast of','tzom','tisha b',"ta'anit",'taanit',
+      'yom hashoah','yom hazikaron','yom haatzmaut',"yom ha'atzmaut",
+      'yom haatzma','independence day','yom yerushalayim','jerusalem day',
+      'yom haaliyah','aliyah day','lag b','lag ba',
+      'ראש','יום','פסח',
+      'סוכות','חנוכה',
+      'פורים','שבועות',
+      'כיפור','השואה',
+      'הזיכרון','העצמאות',
+      'ירושלים'
+    ];
+    function isJewish(name){
+      const l = name.toLowerCase();
+      return JEWISH_KW.some(k => l.includes(k));
+    }
 
     const seenNY = new Set();
     const newJH = {};
-    let skipped = 0;
+    let skipped = 0, kept = 0;
     for(const ev of items){
       const raw  = (ev.summary || '').trim();
       const date = ev.start.date;
       const year = date.substring(0, 4);
       const norm = normHolName(raw);
       if(!norm){ skipped++; continue; }
+      if(!isJewish(norm)){ skipped++; continue; }  // skip non-Jewish holidays
       const nyKey = norm + '|' + year;
       if(seenNY.has(nyKey)){ skipped++; continue; }
       seenNY.add(nyKey);
       if(!newJH[date] || norm.length < newJH[date].length) newJH[date] = norm;
+      kept++;
     }
+    dbg('Jewish holidays kept='+kept+' skipped='+skipped+' total='+items.length, 'ok');
 
     JH = newJH;
     localStorage.setItem('israelHolidays', JSON.stringify(JH));
